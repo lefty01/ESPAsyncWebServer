@@ -23,7 +23,11 @@
 
 #include <Arduino.h>
 #ifdef ESP32
+#if ASYNC_TCP_SSL_ENABLED
+#include <AsyncTCP_SSL.h>
+#else
 #include <AsyncTCP.h>
+#endif
 #define WS_MAX_QUEUED_MESSAGES 32
 #else
 #include <ESPAsyncTCP.h>
@@ -117,7 +121,7 @@ class AsyncWebSocketMessage {
     AsyncWebSocketMessage():_opcode(WS_TEXT),_mask(false),_status(WS_MSG_ERROR){}
     virtual ~AsyncWebSocketMessage(){}
     virtual void ack(size_t len __attribute__((unused)), uint32_t time __attribute__((unused))){}
-    virtual size_t send(AsyncClient *client __attribute__((unused))){ return 0; }
+    virtual size_t send(AsyncSSLClient *client __attribute__((unused))){ return 0; }
     virtual bool finished(){ return _status != WS_MSG_SENDING; }
     virtual bool betweenFrames() const { return false; }
 };
@@ -135,7 +139,7 @@ public:
     virtual ~AsyncWebSocketBasicMessage() override;
     virtual bool betweenFrames() const override { return _acked == _ack; }
     virtual void ack(size_t len, uint32_t time) override ;
-    virtual size_t send(AsyncClient *client) override ;
+    virtual size_t send(AsyncSSLClient *client) override ;
 };
 
 class AsyncWebSocketMultiMessage: public AsyncWebSocketMessage {
@@ -151,12 +155,12 @@ public:
     virtual ~AsyncWebSocketMultiMessage() override;
     virtual bool betweenFrames() const override { return _acked == _ack; }
     virtual void ack(size_t len, uint32_t time) override ;
-    virtual size_t send(AsyncClient *client) override ;
+    virtual size_t send(AsyncSSLClient *client) override ;
 };
 
 class AsyncWebSocketClient {
   private:
-    AsyncClient *_client;
+    AsyncSSLClient *_client;
     AsyncWebSocket *_server;
     uint32_t _clientId;
     AwsClientStatus _status;
@@ -183,7 +187,7 @@ class AsyncWebSocketClient {
     //client id increments for the given server
     uint32_t id(){ return _clientId; }
     AwsClientStatus status(){ return _status; }
-    AsyncClient* client(){ return _client; }
+    AsyncSSLClient* client(){ return _client; }
     AsyncWebSocket *server(){ return _server; }
     AwsFrameInfo const &pinfo() const { return _pinfo; }
 

@@ -30,7 +30,11 @@
 
 #ifdef ESP32
 #include <WiFi.h>
+#if ASYNC_TCP_SSL_ENABLED
+#include <AsyncTCP_SSL.h>
+#else
 #include <AsyncTCP.h>
+#endif
 #elif defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
@@ -137,7 +141,7 @@ class AsyncWebServerRequest {
   friend class AsyncWebServer;
   friend class AsyncCallbackWebHandler;
   private:
-    AsyncClient* _client;
+    AsyncSSLClient* _client;
     AsyncWebServer* _server;
     AsyncWebHandler* _handler;
     AsyncWebServerResponse* _response;
@@ -204,10 +208,10 @@ class AsyncWebServerRequest {
     File _tempFile;
     void *_tempObject;
 
-    AsyncWebServerRequest(AsyncWebServer*, AsyncClient*);
+    AsyncWebServerRequest(AsyncWebServer*, AsyncSSLClient*);
     ~AsyncWebServerRequest();
 
-    AsyncClient* client(){ return _client; }
+    AsyncSSLClient* client(){ return _client; }
     uint8_t version() const { return _version; }
     WebRequestMethodComposite method() const { return _method; }
     const String& url() const { return _url; }

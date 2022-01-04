@@ -31,7 +31,7 @@
 
 #define MAX_PRINTF_LEN 64
 
-size_t webSocketSendFrameWindow(AsyncClient *client){
+size_t webSocketSendFrameWindow(AsyncSSLClient *client){
   if(!client->canSend())
     return 0;
   size_t space = client->space();
@@ -40,7 +40,7 @@ size_t webSocketSendFrameWindow(AsyncClient *client){
   return space - 8;
 }
 
-size_t webSocketSendFrame(AsyncClient *client, bool final, uint8_t opcode, bool mask, uint8_t *data, size_t len){
+size_t webSocketSendFrame(AsyncSSLClient *client, bool final, uint8_t opcode, bool mask, uint8_t *data, size_t len){
   if(!client->canSend())
     return 0;
   size_t space = client->space();
@@ -259,7 +259,7 @@ class AsyncWebSocketControl {
     virtual bool finished() const { return _finished; }
     uint8_t opcode(){ return _opcode; }
     uint8_t len(){ return _len + 2; }
-    size_t send(AsyncClient *client){
+    size_t send(AsyncSSLClient *client){
       _finished = true;
       return webSocketSendFrame(client, true, _opcode & 0x0F, _mask, _data, _len);
     }
@@ -313,7 +313,7 @@ AsyncWebSocketBasicMessage::~AsyncWebSocketBasicMessage() {
     _status = WS_MSG_SENT;
   }
 }
- size_t AsyncWebSocketBasicMessage::send(AsyncClient *client)  {
+ size_t AsyncWebSocketBasicMessage::send(AsyncSSLClient *client)  {
   if(_status != WS_MSG_SENDING)
     return 0;
   if(_acked < _ack){
@@ -410,7 +410,7 @@ AsyncWebSocketMultiMessage::~AsyncWebSocketMultiMessage() {
   }
   //ets_printf("A: %u\n", len);
 }
- size_t AsyncWebSocketMultiMessage::send(AsyncClient *client)  {
+ size_t AsyncWebSocketMultiMessage::send(AsyncSSLClient *client)  {
   if(_status != WS_MSG_SENDING)
     return 0;
   if(_acked < _ack){
@@ -473,12 +473,12 @@ AsyncWebSocketClient::AsyncWebSocketClient(AsyncWebServerRequest *request, Async
   _lastMessageTime = millis();
   _keepAlivePeriod = 0;
   _client->setRxTimeout(0);
-  _client->onError([](void *r, AsyncClient* c, int8_t error){ (void)c; ((AsyncWebSocketClient*)(r))->_onError(error); }, this);
-  _client->onAck([](void *r, AsyncClient* c, size_t len, uint32_t time){ (void)c; ((AsyncWebSocketClient*)(r))->_onAck(len, time); }, this);
-  _client->onDisconnect([](void *r, AsyncClient* c){ ((AsyncWebSocketClient*)(r))->_onDisconnect(); delete c; }, this);
-  _client->onTimeout([](void *r, AsyncClient* c, uint32_t time){ (void)c; ((AsyncWebSocketClient*)(r))->_onTimeout(time); }, this);
-  _client->onData([](void *r, AsyncClient* c, void *buf, size_t len){ (void)c; ((AsyncWebSocketClient*)(r))->_onData(buf, len); }, this);
-  _client->onPoll([](void *r, AsyncClient* c){ (void)c; ((AsyncWebSocketClient*)(r))->_onPoll(); }, this);
+  _client->onError([](void *r, AsyncSSLClient* c, int8_t error){ (void)c; ((AsyncWebSocketClient*)(r))->_onError(error); }, this);
+  _client->onAck([](void *r, AsyncSSLClient* c, size_t len, uint32_t time){ (void)c; ((AsyncWebSocketClient*)(r))->_onAck(len, time); }, this);
+  _client->onDisconnect([](void *r, AsyncSSLClient* c){ ((AsyncWebSocketClient*)(r))->_onDisconnect(); delete c; }, this);
+  _client->onTimeout([](void *r, AsyncSSLClient* c, uint32_t time){ (void)c; ((AsyncWebSocketClient*)(r))->_onTimeout(time); }, this);
+  _client->onData([](void *r, AsyncSSLClient* c, void *buf, size_t len){ (void)c; ((AsyncWebSocketClient*)(r))->_onData(buf, len); }, this);
+  _client->onPoll([](void *r, AsyncSSLClient* c){ (void)c; ((AsyncWebSocketClient*)(r))->_onPoll(); }, this);
   _server->_addClient(this);
   _server->_handleEvent(this, WS_EVT_CONNECT, request, NULL, 0);
   delete request;

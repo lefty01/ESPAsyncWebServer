@@ -23,7 +23,11 @@
 #include <Arduino.h>
 #include <Arduino.h>
 #ifdef ESP32
+#if ASYNC_TCP_SSL_ENABLED
+#include <AsyncTCP_SSL.h>
+#else
 #include <AsyncTCP.h>
+#endif
 #else
 #include <ESPAsyncTCP.h>
 #endif
@@ -65,14 +69,14 @@ class AsyncEventSourceMessage {
     AsyncEventSourceMessage(const char * data, size_t len);
     ~AsyncEventSourceMessage();
     size_t ack(size_t len, uint32_t time __attribute__((unused)));
-    size_t send(AsyncClient *client);
+    size_t send(AsyncSSLClient *client);
     bool finished(){ return _acked == _len; }
     bool sent() { return _sent == _len; }
 };
 
 class AsyncEventSourceClient {
   private:
-    AsyncClient *_client;
+    AsyncSSLClient *_client;
     AsyncEventSource *_server;
     uint32_t _lastId;
     LinkedList<AsyncEventSourceMessage *> _messageQueue;
@@ -84,7 +88,7 @@ class AsyncEventSourceClient {
     AsyncEventSourceClient(AsyncWebServerRequest *request, AsyncEventSource *server);
     ~AsyncEventSourceClient();
 
-    AsyncClient* client(){ return _client; }
+    AsyncSSLClient* client(){ return _client; }
     void close();
     void write(const char * message, size_t len);
     void send(const char *message, const char *event=NULL, uint32_t id=0, uint32_t reconnect=0);

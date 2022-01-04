@@ -137,7 +137,7 @@ size_t AsyncEventSourceMessage::ack(size_t len, uint32_t time) {
   return 0;
 }
 
-size_t AsyncEventSourceMessage::send(AsyncClient *client) {
+size_t AsyncEventSourceMessage::send(AsyncSSLClient *client) {
   if (!client->canSend())
     return 0;
   const size_t len = _len - _sent;
@@ -163,11 +163,11 @@ AsyncEventSourceClient::AsyncEventSourceClient(AsyncWebServerRequest *request, A
 
   _client->setRxTimeout(0);
   _client->onError(NULL, NULL);
-  _client->onAck([](void *r, AsyncClient* c, size_t len, uint32_t time){ (void)c; ((AsyncEventSourceClient*)(r))->_onAck(len, time); }, this);
-  _client->onPoll([](void *r, AsyncClient* c){ (void)c; ((AsyncEventSourceClient*)(r))->_onPoll(); }, this);
+  _client->onAck([](void *r, AsyncSSLClient* c, size_t len, uint32_t time){ (void)c; ((AsyncEventSourceClient*)(r))->_onAck(len, time); }, this);
+  _client->onPoll([](void *r, AsyncSSLClient* c){ (void)c; ((AsyncEventSourceClient*)(r))->_onPoll(); }, this);
   _client->onData(NULL, NULL);
-  _client->onTimeout([this](void *r, AsyncClient* c __attribute__((unused)), uint32_t time){ ((AsyncEventSourceClient*)(r))->_onTimeout(time); }, this);
-  _client->onDisconnect([this](void *r, AsyncClient* c){ ((AsyncEventSourceClient*)(r))->_onDisconnect(); delete c; }, this);
+  _client->onTimeout([this](void *r, AsyncSSLClient* c __attribute__((unused)), uint32_t time){ ((AsyncEventSourceClient*)(r))->_onTimeout(time); }, this);
+  _client->onDisconnect([this](void *r, AsyncSSLClient* c){ ((AsyncEventSourceClient*)(r))->_onDisconnect(); delete c; }, this);
 
   _server->_addClient(this);
   delete request;
